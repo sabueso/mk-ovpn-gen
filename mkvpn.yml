@@ -9,5 +9,5 @@
   #become_ask_pass: true
   # check_mode: no
   roles:
-    - ./mk-ovpn-gen/
+    - ./mk-ovpn-gen/roles/certs
 
