@@ -8,11 +8,15 @@
 #- debug: 
 #   msg: copy EASY-RSA if exists under /usr/share if exists
 
+#Check path
+
 - name: Ansible check file exists example.
   stat:
     path: /usr/share/easy-rsa/
   register: usr_easyrsa
 
+#Copy if easy-rsa exists
+ 
 - synchronize:
     src: /usr/share/easy-rsa
     dest: cert_files
@@ -21,12 +25,7 @@
       #some times, the "keys" dir unthe easy-rsa is not wide readeable
   when: usr_easyrsa.stat.exists
 
-#source vars
-# - name: source vars 
-#   command: "source ./vars"
-#   args:
-#     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
-#   register: source_output
+#./clean-all && ./pkitool --initca
 
 - name: "source var files"
   shell: "source vars && ./clean-all && ./pkitool --initca"
@@ -36,8 +35,7 @@
   register: source_output
 - debug: var=source_output.stdout_lines
 
-#./clean-all
-#./pkitool --initca
+#Massive regexp in the easy-rsa's vars file
 
 - lineinfile:
     path: '{{ playbook_dir }}/cert_files/easy-rsa/vars'

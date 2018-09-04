@@ -1,0 +1,17 @@
+---
+# tasks file for mkinteract
+- name: "Import vars from certs role"
+  include_vars:
+    file: ../certs/vars/main.yml
+    name: cert_vars
+
+- name: "Upload generated CA certs to Mikrotik's device"
+  shell: 'sshpass -p {{mkpass}} \
+  scp -o StrictHostKeyChecking=no {{ playbook_dir }}/cert_files/easy-rsa/keys/ca.* \
+  admin@{{ mkhost }}:./'
+  args:
+    executable: /bin/bash
+
+
+
+
