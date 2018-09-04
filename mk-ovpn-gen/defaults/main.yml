@@ -1,0 +1,15 @@
+---
+# defaults file for mk-ovpn-gen
+
+#Expiration time
+
+cadays: 365
+certdays: 365
+
+#Location vars
+country: "DefCT"
+province: "DefProvince"
+city: "DefCity"
+org: "DefKeyOrg"
+email: "DefKeyEmail"
+ou: "DefOU"
