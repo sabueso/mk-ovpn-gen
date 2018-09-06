@@ -9,14 +9,17 @@
 #   msg: copy EASY-RSA if exists under /usr/share if exists
 
 #Check path
-
 - name: Ansible check file exists example.
   stat:
     path: /usr/share/easy-rsa/
   register: usr_easyrsa
 
+#Check openssl version
+- name: Checking Openssl version
+  shell: openssl version |grep -o -E '[0-9]\.[0-9]\.[0-9]'
+  register: openssl_output
+
 #Copy if easy-rsa exists
- 
 - synchronize:
     src: /usr/share/easy-rsa
     dest: cert_files
@@ -25,10 +28,15 @@
       #some times, the "keys" dir unthe easy-rsa is not wide readeable
   when: usr_easyrsa.stat.exists
 
+#Workaround https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=905854
+- name: "Testing and patching easy-rsa & openssl bug for Debian9"
+  file: 
+    src: '{{ playbook_dir }}/cert_files/easy-rsa/openssl-1.0.0.cnf'
+    dest: '{{ playbook_dir }}/cert_files/easy-rsa/openssl.cnf'
+    state: link
+  when: openssl_output.stdout > '1.0.0'
+
 #CA part
-
-#./clean-all && ./pkitool --initca
-
 - name: "Clean & Init CA cert"
   shell: "source vars && ./clean-all && ./pkitool --initca"
   args:
@@ -38,7 +46,6 @@
 #- debug: var=source_output.stdout_lines
 
 #Massive regexp in the easy-rsa's vars file
-
 - lineinfile:
     path: '{{ playbook_dir }}/cert_files/easy-rsa/vars'
     regexp: "{{ item.regexp }}"
@@ -52,15 +59,12 @@
     - { regexp: 'export KEY_EMAIL=.*$', line: 'export KEY_EMAIL="{{ email }}"' }
     - { regexp: 'export KEY_OU=.*$', line: 'export KEY_OU="{{ ou}}"' }
 
-#DEVICE part
-
-
+#Appliance part
 - name: "Mikrotik's device cert"
   shell: "source vars && ./pkitool --server {{ devicecert }} "
   args:
      executable: /bin/bash
      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
-
 
 - name: "Convert appliance private key to .pem format"
   shell: "openssl rsa -in keys/{{ devicecert }}.key -out keys/{{ devicecert }}.pem"
