@@ -5,13 +5,35 @@
     file: ../certs/vars/main.yml
     name: cert_vars
 
-- name: "Upload generated CA certs to Mikrotik's device"
+- name: "Uploadng CA certs to Mikrotik's device"
   shell: 'sshpass -p {{mkpass}} \
-  scp -o StrictHostKeyChecking=no {{ playbook_dir }}/cert_files/easy-rsa/keys/ca.* \
-  admin@{{ mkhost }}:./'
+  scp -o StrictHostKeyChecking=no \
+  {{ playbook_dir }}/cert_files/easy-rsa/keys/ca.crt \
+  {{ mkuser }}@{{ mkhost }}:./'
   args:
     executable: /bin/bash
 
+- name: "Uploading appliance certs & key to Mikrotik's device"
+  shell: 'sshpass -p {{mkpass}} \
+  scp -o StrictHostKeyChecking=no \
+  {{ playbook_dir }}/cert_files/easy-rsa/keys/{{ devicecert }}.crt \
+  {{ playbook_dir }}/cert_files/easy-rsa/keys/{{ devicecert }}.pem \
+  {{ mkuser }}@{{ mkhost }}:./'
+  args:
+    executable: /bin/bash
 
+- name: "Import certs on appliance"
+  shell: 'sshpass -p {{ mkpass }} ssh {{ mkuser }}@{{ mkhost }} -C "/certificate import file-name={{ devicecert }}.crt passphrase=none"'
+  args:
+    executable: /bin/bash
 
+#KEY problem, validar por que no se importa la KEY en el router...
+- name: "Import key certs on appliance"
+  shell: 'sshpass -p {{ mkpass }} ssh {{ mkuser }}@{{ mkhost }} -C "/certificate import file-name={{ devicecert }}.key passphrase=none"'
+  args:
+    executable: /bin/bash
 
+- name: "Import CA on appliance"
+  shell: 'sshpass -p {{ mkpass }} ssh {{ mkuser }}@{{ mkhost }} -C "/certificate import file-name=ca.crt passphrase=none"'
+  args:
+    executable: /bin/bash    

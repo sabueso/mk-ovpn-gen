@@ -25,15 +25,17 @@
       #some times, the "keys" dir unthe easy-rsa is not wide readeable
   when: usr_easyrsa.stat.exists
 
+#CA part
+
 #./clean-all && ./pkitool --initca
 
-- name: "source var files"
+- name: "Clean & Init CA cert"
   shell: "source vars && ./clean-all && ./pkitool --initca"
   args:
      executable: /bin/bash
      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
-  register: source_output
-- debug: var=source_output.stdout_lines
+#  register: source_output
+#- debug: var=source_output.stdout_lines
 
 #Massive regexp in the easy-rsa's vars file
 
@@ -49,3 +51,19 @@
     - { regexp: 'export KEY_ORG=.*$', line: 'export KEY_ORG="{{ org }}"' }
     - { regexp: 'export KEY_EMAIL=.*$', line: 'export KEY_EMAIL="{{ email }}"' }
     - { regexp: 'export KEY_OU=.*$', line: 'export KEY_OU="{{ ou}}"' }
+
+#DEVICE part
+
+
+- name: "Mikrotik's device cert"
+  shell: "source vars && ./pkitool --server {{ devicecert }} "
+  args:
+     executable: /bin/bash
+     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
+
+
+- name: "Convert appliance private key to .pem format"
+  shell: "openssl rsa -in keys/{{ devicecert }}.key -out keys/{{ devicecert }}.pem"
+  args:
+     executable: /bin/bash
+     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
