@@ -3,4 +3,5 @@
 
 mkhost: 192.168.88.1
 mkuser: admin
-mkpass: ''
+#Preserve '' to use sshpass with no password and avoid crash
+mkpass: "''"

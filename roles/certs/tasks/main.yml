@@ -9,18 +9,19 @@
 #   msg: copy EASY-RSA if exists under /usr/share if exists
 
 #Check path
-- name: Ansible check file exists example.
+- name: "Cert=>check if easy-rsa exists"
   stat:
     path: /usr/share/easy-rsa/
   register: usr_easyrsa
 
 #Check openssl version
-- name: Checking Openssl version
+- name: "Cert=>Checking Openssl version"
   shell: openssl version |grep -o -E '[0-9]\.[0-9]\.[0-9]'
   register: openssl_output
 
 #Copy if easy-rsa exists
 - synchronize:
+    #name: "Cert=> synchronize easy-rsa folder to local dir"
     src: /usr/share/easy-rsa
     dest: cert_files
     rsync_opts:    
@@ -29,7 +30,7 @@
   when: usr_easyrsa.stat.exists
 
 #Workaround https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=905854
-- name: "Testing and patching easy-rsa & openssl bug for Debian9"
+- name: "Cert=> Testing and patching easy-rsa & openssl bug for Debian9"
   file: 
     src: '{{ playbook_dir }}/cert_files/easy-rsa/openssl-1.0.0.cnf'
     dest: '{{ playbook_dir }}/cert_files/easy-rsa/openssl.cnf'
@@ -37,16 +38,15 @@
   when: openssl_output.stdout > '1.0.0'
 
 #CA part
-- name: "Clean & Init CA cert"
-  shell: "source vars && ./clean-all && ./pkitool --initca"
+- name: "Cert=> Clean old instalation files"
+  shell: "source vars && ./clean-all"
   args:
      executable: /bin/bash
      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
-#  register: source_output
-#- debug: var=source_output.stdout_lines
 
 #Massive regexp in the easy-rsa's vars file
 - lineinfile:
+    #name: "Cert=> Replace vars file with proper values"
     path: '{{ playbook_dir }}/cert_files/easy-rsa/vars'
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
@@ -59,14 +59,29 @@
     - { regexp: 'export KEY_EMAIL=.*$', line: 'export KEY_EMAIL="{{ email }}"' }
     - { regexp: 'export KEY_OU=.*$', line: 'export KEY_OU="{{ ou}}"' }
 
+- name: "Cert=> Init CA cert"
+  shell: "source vars && ./pkitool --initca"
+  args:
+     executable: /bin/bash
+     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
+
+#vars debug
+# - name: "Vars debug"
+#   shell: "cat vars"
+#   args:
+#      executable: /bin/bash
+#      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
+#   register: vars_output
+# - debug: var=_output.stdout_lines
+
 #Appliance part
-- name: "Mikrotik's device cert"
+- name: "Cert=> Mikrotik's device cert"
   shell: "source vars && ./pkitool --server {{ devicecert }} "
   args:
      executable: /bin/bash
      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
 
-- name: "Convert appliance private key to .pem format"
+- name: "Cert=> Convert appliance private key to .pem format"
   shell: "openssl rsa -in keys/{{ devicecert }}.key -out keys/{{ devicecert }}.pem"
   args:
      executable: /bin/bash
