@@ -9,18 +9,19 @@
 #   msg: copy EASY-RSA if exists under /usr/share if exists
 
 #Check path
-- name: "Cert=>check if easy-rsa exists"
+- name: "Cert=> check if easy-rsa exists"
   stat:
     path: /usr/share/easy-rsa/
   register: usr_easyrsa
 
 #Check openssl version
-- name: "Cert=>Checking Openssl version"
+- name: "Cert=> checking Openssl version"
   shell: openssl version |grep -o -E '[0-9]\.[0-9]\.[0-9]'
   register: openssl_output
 
 #Copy if easy-rsa exists
-- synchronize:
+- name: "Cert=> copy /usr/share/easy-rsa to local dir"
+  synchronize:
     #name: "Cert=> synchronize easy-rsa folder to local dir"
     src: /usr/share/easy-rsa
     dest: cert_files
@@ -30,7 +31,7 @@
   when: usr_easyrsa.stat.exists
 
 #Workaround https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=905854
-- name: "Cert=> Testing and patching easy-rsa & openssl bug for Debian9"
+- name: "Cert=> testing and patching easy-rsa & openssl bug for Debian9"
   file: 
     src: '{{ playbook_dir }}/cert_files/easy-rsa/openssl-1.0.0.cnf'
     dest: '{{ playbook_dir }}/cert_files/easy-rsa/openssl.cnf'
@@ -38,14 +39,15 @@
   when: openssl_output.stdout > '1.0.0'
 
 #CA part
-- name: "Cert=> Clean old instalation files"
+- name: "Cert=> clean old instalation files"
   shell: "source vars && ./clean-all"
   args:
      executable: /bin/bash
      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
 
 #Massive regexp in the easy-rsa's vars file
-- lineinfile:
+- name: "Cert=> massive regexp"
+  lineinfile:
     #name: "Cert=> Replace vars file with proper values"
     path: '{{ playbook_dir }}/cert_files/easy-rsa/vars'
     regexp: "{{ item.regexp }}"

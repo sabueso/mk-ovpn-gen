@@ -37,3 +37,4 @@
   shell: 'sshpass -p {{ mkpass }} ssh {{ mkuser }}@{{ mkhost }} -C "/certificate import file-name=ca.crt passphrase=none"'
   args:
     executable: /bin/bash    
+
