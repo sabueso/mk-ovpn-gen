@@ -59,3 +59,6 @@ auth SHA1
 pull
 
 auth-user-pass user.cfg
+--------
+
+URL: https://wiki.mikrotik.com/wiki/Manual:Create_Certificates#Generate_certificates_on_RouterOS
