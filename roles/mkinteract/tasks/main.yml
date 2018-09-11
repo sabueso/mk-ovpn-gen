@@ -1,40 +1,8 @@
 ---
-# tasks file for mkinteract
-- name: "Appliance=> Import vars from certs role"
-  include_vars:
-    file: ../certs/vars/main.yml
-    name: cert_vars
+#Connect to router and create the templates
 
-- name: "Appliance=> Uploading CA certs to Mikrotik's device"
-  shell: 'sshpass -p {{mkpass}} \
-  scp -o StrictHostKeyChecking=no \
-  {{ playbook_dir }}/cert_files/easy-rsa/keys/ca.crt \
-  {{ mkuser }}@{{ mkhost }}:./'
-  args:
-    executable: /bin/bash
-
-- name: "Appliance=> Uploading appliance certs & key to Mikrotik's device"
-  shell: 'sshpass -p {{mkpass}} \
-  scp -o StrictHostKeyChecking=no \
-  {{ playbook_dir }}/cert_files/easy-rsa/keys/{{ devicecert }}.crt \
-  {{ playbook_dir }}/cert_files/easy-rsa/keys/{{ devicecert }}.pem \
-  {{ mkuser }}@{{ mkhost }}:./'
-  args:
-    executable: /bin/bash
-
-- name: "Appliance=> Import certs on appliance"
-  shell: 'sshpass -p {{ mkpass }} ssh {{ mkuser }}@{{ mkhost }} -C "/certificate import file-name={{ devicecert }}.crt passphrase=none"'
-  args:
-    executable: /bin/bash
-
-#KEY problem, validar por que no se importa la KEY en el router...
-- name: "Appliance=> Import key certs on appliance"
-  shell: 'sshpass -p {{ mkpass }} ssh {{ mkuser }}@{{ mkhost }} -C "/certificate import file-name={{ devicecert }}.pem passphrase=none"'
-  args:
-    executable: /bin/bash
-
-- name: "Appliance=> Import CA on appliance"
-  shell: 'sshpass -p {{ mkpass }} ssh {{ mkuser }}@{{ mkhost }} -C "/certificate import file-name=ca.crt passphrase=none"'
-  args:
-    executable: /bin/bash    
-
+- name: Display resource statistics (routeros)
+  routeros_command:
+    commands: 
+      - /system resource print
+  register: routeros_resources

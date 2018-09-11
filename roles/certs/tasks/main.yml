@@ -8,83 +8,74 @@
 #- debug: 
 #   msg: copy EASY-RSA if exists under /usr/share if exists
 
-#Check path
-- name: "Cert=> check if easy-rsa exists"
-  stat:
-    path: /usr/share/easy-rsa/
-  register: usr_easyrsa
+# #Check path
+# - name: "Cert=> check if easy-rsa exists"
+#   stat:
+#     path: /usr/share/easy-rsa/
+#   register: usr_easyrsa
 
-#Check openssl version
-- name: "Cert=> checking Openssl version"
-  shell: openssl version |grep -o -E '[0-9]\.[0-9]\.[0-9]'
-  register: openssl_output
+# #Check openssl version
+# - name: "Cert=> checking Openssl version"
+#   shell: openssl version |grep -o -E '[0-9]\.[0-9]\.[0-9]'
+#   register: openssl_output
 
-#Copy if easy-rsa exists
-- name: "Cert=> copy /usr/share/easy-rsa to local dir"
-  synchronize:
-    #name: "Cert=> synchronize easy-rsa folder to local dir"
-    src: /usr/share/easy-rsa
-    dest: cert_files
-    rsync_opts:    
-      - "--exclude=keys"
-      #some times, the "keys" dir unthe easy-rsa is not wide readeable
-  when: usr_easyrsa.stat.exists
+# #Copy if easy-rsa exists
+# - name: "Cert=> copy /usr/share/easy-rsa to local dir"
+#   synchronize:
+#     #name: "Cert=> synchronize easy-rsa folder to local dir"
+#     src: /usr/share/easy-rsa
+#     dest: cert_files
+#     rsync_opts:    
+#       - "--exclude=keys"
+#       #some times, the "keys" dir unthe easy-rsa is not wide readeable
+#   when: usr_easyrsa.stat.exists
 
-#Workaround https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=905854
-- name: "Cert=> testing and patching easy-rsa & openssl bug for Debian9"
-  file: 
-    src: '{{ playbook_dir }}/cert_files/easy-rsa/openssl-1.0.0.cnf'
-    dest: '{{ playbook_dir }}/cert_files/easy-rsa/openssl.cnf'
-    state: link
-  when: openssl_output.stdout > '1.0.0'
+# #Workaround https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=905854
+# - name: "Cert=> testing and patching easy-rsa & openssl bug for Debian9"
+#   file: 
+#     src: '{{ playbook_dir }}/cert_files/easy-rsa/openssl-1.0.0.cnf'
+#     dest: '{{ playbook_dir }}/cert_files/easy-rsa/openssl.cnf'
+#     state: link
+#   when: openssl_output.stdout > '1.0.0'
 
-#CA part
-- name: "Cert=> clean old instalation files"
-  shell: "source vars && ./clean-all"
-  args:
-     executable: /bin/bash
-     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
-
-#Massive regexp in the easy-rsa's vars file
-- name: "Cert=> massive regexp"
-  lineinfile:
-    #name: "Cert=> Replace vars file with proper values"
-    path: '{{ playbook_dir }}/cert_files/easy-rsa/vars'
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  with_items:
-    - { regexp: 'export CA_EXPIRE=.*$', line: 'export CA_EXPIRE={{ cadays }}' }
-    - { regexp: 'export KEY_COUNTRY=.*$', line: 'export KEY_COUNTRY="{{ country }}"' }
-    - { regexp: 'export KEY_PROVINCE=.*$', line: 'export KEY_PROVINCE="{{ province }}"' }
-    - { regexp: 'export KEY_CITY=.*$', line: 'export KEY_CITY="{{ city }}"' }
-    - { regexp: 'export KEY_ORG=.*$', line: 'export KEY_ORG="{{ org }}"' }
-    - { regexp: 'export KEY_EMAIL=.*$', line: 'export KEY_EMAIL="{{ email }}"' }
-    - { regexp: 'export KEY_OU=.*$', line: 'export KEY_OU="{{ ou}}"' }
-
-- name: "Cert=> Init CA cert"
-  shell: "source vars && ./pkitool --initca"
-  args:
-     executable: /bin/bash
-     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
-
-#vars debug
-# - name: "Vars debug"
-#   shell: "cat vars"
+# #CA part
+# - name: "Cert=> clean old instalation files"
+#   shell: "source vars && ./clean-all"
 #   args:
 #      executable: /bin/bash
 #      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
-#   register: vars_output
-# - debug: var=_output.stdout_lines
 
-#Appliance part
-- name: "Cert=> Mikrotik's device cert"
-  shell: "source vars && ./pkitool --server {{ devicecert }} "
-  args:
-     executable: /bin/bash
-     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
+# #Massive regexp in the easy-rsa's vars file
+# - name: "Cert=> massive regexp"
+#   lineinfile:
+#     #name: "Cert=> Replace vars file with proper values"
+#     path: '{{ playbook_dir }}/cert_files/easy-rsa/vars'
+#     regexp: "{{ item.regexp }}"
+#     line: "{{ item.line }}"
+#   with_items:
+#     - { regexp: 'export CA_EXPIRE=.*$', line: 'export CA_EXPIRE={{ cadays }}' }
+#     - { regexp: 'export KEY_COUNTRY=.*$', line: 'export KEY_COUNTRY="{{ country }}"' }
+#     - { regexp: 'export KEY_PROVINCE=.*$', line: 'export KEY_PROVINCE="{{ province }}"' }
+#     - { regexp: 'export KEY_CITY=.*$', line: 'export KEY_CITY="{{ city }}"' }
+#     - { regexp: 'export KEY_ORG=.*$', line: 'export KEY_ORG="{{ org }}"' }
+#     - { regexp: 'export KEY_EMAIL=.*$', line: 'export KEY_EMAIL="{{ email }}"' }
+#     - { regexp: 'export KEY_OU=.*$', line: 'export KEY_OU="{{ ou}}"' }
 
-- name: "Cert=> Convert appliance private key to .pem format"
-  shell: "openssl rsa -in keys/{{ devicecert }}.key -out keys/{{ devicecert }}.pem"
-  args:
-     executable: /bin/bash
-     chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
+# - name: "Cert=> Init CA cert"
+#   shell: "source vars && ./pkitool --initca"
+#   args:
+#      executable: /bin/bash
+#      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
+
+# #Appliance part
+# - name: "Cert=> Mikrotik's device cert"
+#   shell: "source vars && ./pkitool --server {{ devicecert }} "
+#   args:
+#      executable: /bin/bash
+#      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'
+
+# - name: "Cert=> Convert appliance private key to .pem format"
+#   shell: "openssl rsa -in keys/{{ devicecert }}.key -out keys/{{ devicecert }}.pem"
+#   args:
+#      executable: /bin/bash
+#      chdir: '{{ playbook_dir }}/cert_files/easy-rsa/'

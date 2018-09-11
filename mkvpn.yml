@@ -1,7 +1,7 @@
 #!/usr/bin/env ansible-playbook
 ---
 - hosts: all
-  connection: local
+  connection: paramiko
   gather_facts: no
   
   roles:

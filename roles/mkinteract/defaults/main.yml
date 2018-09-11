@@ -1,7 +1,11 @@
 ---
 # defaults file for mkinteract
 
-mkhost: 192.168.88.1
+mkhost: 192.168.100.55
 mkuser: admin
 #Preserve '' to use sshpass with no password and avoid crash
 mkpass: "''"
+
+#Appliance vars
+devicecert: "mkdevice"
+deviceopts: "-o StrictHostKeyChecking=no"
