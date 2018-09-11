@@ -1,8 +1,63 @@
 ---
 #Connect to router and create the templates
 
-- name: Display resource statistics (routeros)
-  routeros_command:
-    commands: 
-      - /system resource print
-  register: routeros_resources
+#Server certs
+- name: "Mkt=> Cert=> Deploying CA& server certs"
+  raw: "{{ item }}"
+  with_items:
+    - "/certificate add name=ca-template common-name=myCa key-usage=key-cert-sign,crl-sign"
+    - "/certificate add name={{ devicecert }}-template common-name={{ devicecert }}"
+
+- name: "Mkt=> Cert=> Signing CA& server certificates"
+  raw: "{{ item }}"
+  with_items:
+    - "/certificate sign ca-template ca-crl-host={{ mkhost }} name=myCa"
+    - ":delay 1"
+    - "/certificate sign {{ devicecert }}-template ca=myCa name={{ devicecert }}"
+
+- name: "Mkt=> Cert=> Setting CA& server as trusted certs"
+  raw: "{{ item }}"
+  with_items:
+    - "/certificate set myCa trusted=yes"
+    #- ":delay 1"
+    - "/certificate set {{ devicecert }} trusted=yes"
+
+- name: "Mkt=> Cert=> Export CA file"
+  raw: "/certificate export-certificate myCa"
+
+#Client certs
+- name: "Mkt=> Cert=> Client cert"
+  raw: "{{ item}}"
+  with_items:
+    - "/certificate add name={{ clientname }}-template common-name={{ clientname }}"
+    - "/certificate sign {{ clientname }}-template ca=myCa name={{ clientname }}"
+    - ":delay 1"
+    - "/certificate export-certificate {{ clientname }} export-passphrase={{ clientpass }}"
+    - ":delay 1"
+
+#Configuration on Mikrotik side to run as Openvpn server
+
+- name: "Mkt=> OpenVPN=> Configure a bridge to attach clients to"
+  raw: "{{ item}}"
+  with_items:
+    - "/interface bridge add name=bridge-{{ devicecert }}"
+
+- name: "Mkt=> OpenVPN=> Configure a pool for the vpn"
+  raw: "{{ item}}"
+  with_items:
+    - "/ip pool add name=pool-{{ devicecert }} ranges={{ mkpool }}"
+
+- name: "Mkt=> OpenVPN=> Define a profile for vpn"
+  raw: "{{ item}}"
+  with_items:
+    - "/ppp profile add bridge=bridge-{{ devicecert }} local-address={{ mkbrip }} name=vpn-{{ devicecert }}-prof only-one=no remote-address=pool-{{ devicecert }}"
+
+- name: "Mkt=> OpenVPN=> Define a secret for vpn user"
+  raw: "{{ item}}"
+  with_items:
+    - "/ppp secret add name={{ pppclientuser }} password= {{ pppclientpwd }} profile=vpn-{{ devicecert }}-prof service=ovpn"
+
+- name: "Mkt=> OpenVPN=> Define the main service of Openvpn and enable it"
+  raw: "{{ item}}"
+  with_items:
+    - "/interface ovpn-server server set certificate={{ devicecert }} cipher=blowfish128,aes128,aes192,aes256 default-profile=vpn-{{ devicecert }}-prof enabled=yes keepalive-timeout=30 require-client-certificate=yes"
