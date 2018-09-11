@@ -7,9 +7,14 @@ cadays: 365
 certdays: 365
 
 #Location vars
-country: "DefCT"
+country: "ES"
 province: "DefProvince"
 city: "DefCity"
 org: "DefKeyOrg"
 email: "DefKeyEmail"
 ou: "DefOU"
+
+
+#Appliance vars
+
+devicecert: "mkdevice"

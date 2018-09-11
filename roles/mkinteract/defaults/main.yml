@@ -1,0 +1,25 @@
+---
+# defaults file for mkinteract
+
+mkhost: "192.168.100.55"
+mkuser: admin
+#Preserve '' to use sshpass with no password and avoid crash
+mkpass: "''"
+
+#Appliance vars
+devicecert: "mkdevice"
+deviceopts: "-o StrictHostKeyChecking=no"
+
+#Client vars
+clientname: "client1"
+clientpass: "mylolpass"
+
+#Openvpn vars
+
+mkbrip: "10.10.10.1"
+mkpool: "10.10.10.10-10.10.10.50"
+
+#Client1 user ppp vars
+
+pppclientuser: "client1usr"
+pppclientpwd: "changethispasswd"

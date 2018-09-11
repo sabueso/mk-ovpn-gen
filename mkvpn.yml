@@ -1,13 +1,10 @@
 #!/usr/bin/env ansible-playbook
 ---
 - hosts: all
+  connection: paramiko
   gather_facts: no
-  #remote_user: "root"
-  #become: true
-  #become_user: root
-  #become_method: su
-  #become_ask_pass: true
-  # check_mode: no
+  
   roles:
-    - ./mk-ovpn-gen/
+    - ./roles/certs
+    - ./roles/mkinteract
 

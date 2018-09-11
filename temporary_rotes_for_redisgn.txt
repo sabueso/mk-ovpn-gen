@@ -1,0 +1,64 @@
+-----
+/certificate
+add name=ca-template common-name=myCa key-usage=key-cert-sign,crl-sign
+add name=server-template common-name=server
+add name=client1-template common-name=client1
+add name=client2-template common-name=client2
+
+
+/certificate 
+sign ca-template ca-crl-host=192.168.100.56 name=myCa
+sign server-template ca=myCa name=server
+; time to do the next 2 lines
+sign client1-template ca=myCa name=client1
+sign client2-template ca=myCa name=client2
+
+
+/certificate
+set myCa trusted=yes
+set server trusted=yes
+
+; export
+/certificate export-certificate myCa
+/certificate export-certificate client1 export-passphrase=mylolpass
+
+-----rename files
+mv cert_export_client1.crt client1.crt ; mv cert_export_client1.key client1.key ;  mv cert_export_myCa.crt ca.crt
+
+----config openvpn client
+dev tun
+proto tcp-client
+remote 192.168.100.56 1194
+
+ca      ca.crt
+cert    client1.crt
+key     client1.key
+askpass	client1.pass
+
+tls-client
+#remote-cert-tls server
+
+user nobody
+group nogroup
+
+#comp-lzo # Do not use compression.
+
+# More reliable detection when a system loses its connection.
+ping 15
+ping-restart 45
+ping-timer-rem
+persist-tun
+persist-key
+
+mute-replay-warnings
+
+verb 3
+
+cipher AES-256-CBC
+auth SHA1
+pull
+
+auth-user-pass user.cfg
+--------
+
+URL: https://wiki.mikrotik.com/wiki/Manual:Create_Certificates#Generate_certificates_on_RouterOS
