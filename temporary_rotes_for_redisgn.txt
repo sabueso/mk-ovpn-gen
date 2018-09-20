@@ -1,27 +1,3 @@
------
-/certificate
-add name=ca-template common-name=myCa key-usage=key-cert-sign,crl-sign
-add name=server-template common-name=server
-add name=client1-template common-name=client1
-add name=client2-template common-name=client2
-
-
-/certificate 
-sign ca-template ca-crl-host=192.168.100.56 name=myCa
-sign server-template ca=myCa name=server
-; time to do the next 2 lines
-sign client1-template ca=myCa name=client1
-sign client2-template ca=myCa name=client2
-
-
-/certificate
-set myCa trusted=yes
-set server trusted=yes
-
-; export
-/certificate export-certificate myCa
-/certificate export-certificate client1 export-passphrase=mylolpass
-
 -----rename files
 mv cert_export_client1.crt client1.crt ; mv cert_export_client1.key client1.key ;  mv cert_export_myCa.crt ca.crt
 

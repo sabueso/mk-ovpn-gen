@@ -27,8 +27,14 @@ Use the main playbook file, or integrate the role in your playbook, as you wish.
 
 ```sh
 $ ./mkvpn.yml -i 192.168.88.1, -u admin --ask-pass
-
 ```
+
+If you are not using ssh on standart port, you can try with:
+
+```sh
+$ ./mkvpn.yml -i 192.168.88.1:12345, -u admin --ask-pass
+```
+
 
 ## Config file for client
 
