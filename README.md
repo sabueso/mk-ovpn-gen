@@ -6,7 +6,7 @@ This playbook don't use the easy-rsa package and do all the work using the inter
 
 ### Requirements
 
-	- Ansible 2.7
+	- Ansible 2.4 (or greater)
 	- Openvpn 2.3 (tested on Debian 8/9)
 
 
