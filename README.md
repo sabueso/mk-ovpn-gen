@@ -18,6 +18,7 @@ Edit your ansible.cfg adding this part of code:
 ```sh
 [paramiko_connection]
 pty=False
+look_for_key=no
 ```
 
 ### Usage
